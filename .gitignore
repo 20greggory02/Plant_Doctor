@@ -1,0 +1,10 @@
+# Ignorar el caché de Python
+__pycache__/
+*.pyc
+
+# Ignorar el entorno virtual gigante
+entorno_plantas/
+
+# Ignorar modelos pesados originales
+*.keras
+*.h5
