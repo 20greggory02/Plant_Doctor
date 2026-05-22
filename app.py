@@ -3,7 +3,7 @@ from analizador import AnalizadorCultivos
 
 app = Flask(__name__)
 
-# Cargamos el analizador una sola vez de forma global al iniciar
+
 print("=== INICIANDO CONFIGURACIÓN ===")
 mi_analizador = AnalizadorCultivos('modelo_plantas.keras')
 print("=== SERVIDOR LISTO ===")
@@ -30,5 +30,6 @@ def inicio():
             return render_template('index.html', error=f"Ocurrió un problema: {str(e)}")
 
 if __name__ == '__main__':
-    # Ejecutamos Flask
-    app.run(host='0.0.0.0', port=5000, debug=False, threaded=False)
+    import os
+    puerto = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=puerto)
