@@ -1,3 +1,4 @@
+import flask
 from flask import Flask, request, render_template
 from analizador import AnalizadorCultivos
 
@@ -8,8 +9,11 @@ print("=== INICIANDO CONFIGURACIÓN ===")
 mi_analizador = AnalizadorCultivos('modelo_plantas.keras')
 print("=== SERVIDOR LISTO ===")
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST', 'HEAD'])
 def inicio():
+    if flask.request.method == 'HEAD':
+        return '', 200
+    
     if request.method == 'GET':
         return render_template('index.html')
     
