@@ -1,10 +1,12 @@
-# Ignorar el caché de Python
+# Entornos virtuales (No queremos subir gigabytes de librerías)
+venv/
+.venv/
+env/
+
+# Caché de Python
 __pycache__/
 *.pyc
 
-# Ignorar el entorno virtual gigante
-entorno_plantas/
-
-# Ignorar modelos pesados originales
-*.keras
-*.h5
+# Archivos del sistema u ocultos del editor
+.vscode/
+.DS_Store
