@@ -24,21 +24,48 @@ class AnalizadorCultivos:
         # Cargamos el modelo normal y corriente
         self.modelo = tf.keras.models.load_model(ruta_modelo, safe_mode=False, compile=False)
         
-        self.clases = {
-            0: 'Enfermedad, Raiz roja de la caña', 1: 'azucar_rust', 2: 'azucar_sana', 
-            3: 'azucar_yellow', 4: 'platano_cordana', 5: 'platano_panama', 
-            6: 'platano_sana', 7: 'platano_sigatoka'
-        }
-        
-        self.tratamientos = {
-            'Enfermedad, Raiz roja de la caña': 'Tratamiento sugerido: Eliminar plantas severamente infectadas, mejorar el drenaje del suelo y aplicar fungicidas.',
-            'azucar_rust': 'Tratamiento sugerido: Usar fungicidas específicos para la roya y asegurar una buena circulación de aire.',
-            'azucar_sana': '¡Excelente! La planta de caña está sana. Mantén las buenas prácticas de riego.',
-            'azucar_yellow': 'Tratamiento sugerido: Controlar los pulgones vectores del virus y desinfectar herramientas de corte.',
-            'platano_cordana': 'Tratamiento sugerido: Remover las hojas más afectadas y aplicar fungicidas a base de cobre.',
-            'platano_panama': 'Alerta (Mal de Panamá): Enfermedad muy grave. Aislar la zona, destruir plantas infectadas y desinfectar herramientas.',
-            'platano_sana': '¡Excelente! La planta de plátano está sana. Mantén el monitoreo preventivo.',
-            'platano_sigatoka': 'Tratamiento sugerido: Realizar poda sanitaria (deshoje) y aplicar fungicidas sistémicos y protectantes.'
+        # SUPER-DICCIONARIO: Frases amigables y recomendaciones dobles
+        self.info_clases = {
+            0: {
+                'nombre': 'La hoja presenta una enfermedad, es Raíz Roja de la caña.',
+                'principal': 'Aplicar fungicidas sistémicos específicos y eliminar las plantas severamente infectadas para evitar propagación.',
+                'alternativa': 'Mejorar urgentemente el drenaje del suelo y realizar surcos para que el agua no se estanque en las raíces.'
+            },
+            1: {
+                'nombre': 'La hoja presenta una enfermedad, es Roya en la caña de azúcar.',
+                'principal': 'Usar fungicidas específicos para la roya (triazoles) aplicados por un profesional agrícola.',
+                'alternativa': 'Realizar un deshoje de las partes más afectadas para asegurar una buena circulación de aire y reducir la humedad.'
+            },
+            2: {
+                'nombre': 'La hoja corresponde a una Caña de Azúcar completamente sana. ¡Excelente!',
+                'principal': 'Mantener las buenas prácticas de riego y el cronograma habitual de fertilización.',
+                'alternativa': 'Asegurar limpieza constante de malezas para evitar que compitan por los nutrientes.'
+            },
+            3: {
+                'nombre': 'La hoja presenta una anomalía, es Síndrome de la Hoja Amarilla (Yellow Leaf).',
+                'principal': 'Desinfectar rigurosamente todas las herramientas de corte y usar semillas certificadas libres de virus para el próximo ciclo.',
+                'alternativa': 'Controlar los pulgones (vectores del virus) usando trampas cromáticas o insecticidas de contacto económicos.'
+            },
+            4: {
+                'nombre': 'La hoja presenta una enfermedad, es Mancha de Cordana en el plátano.',
+                'principal': 'Aplicar fungicidas a base de cobre o mancozeb siguiendo un calendario de rotación para evitar resistencia.',
+                'alternativa': 'Remover y destruir (quemar o enterrar) las hojas más afectadas para detener la fuente de infección sin gastar en químicos.'
+            },
+            5: {
+                'nombre': '¡Alerta! La planta presenta Mal de Panamá (Fusariosis), una enfermedad muy grave.',
+                'principal': 'Aplicar estricta cuarentena. Aislar la zona, destruir plantas infectadas de raíz y evitar el tránsito de maquinaria en esa área.',
+                'alternativa': 'Desinfectar botas y herramientas con cloro; no sembrar plátano en ese suelo por mucho tiempo y usar variedades resistentes.'
+            },
+            6: {
+                'nombre': 'La hoja corresponde a una planta de Plátano completamente sana. ¡Buen trabajo!',
+                'principal': 'Mantener el monitoreo preventivo y el plan de nutrición con potasio, que es esencial para el plátano.',
+                'alternativa': 'Realizar labores culturales rutinarias como el control de malezas y deshoje de hojas secas naturales.'
+            },
+            7: {
+                'nombre': 'La hoja presenta una enfermedad, es Sigatoka Negra en el plátano.',
+                'principal': 'Aplicar fungicida sistémico específico alternando con protectores, guiado por un agrónomo.',
+                'alternativa': 'Realizar un deshoje sanitario inmediato (cortar las partes enfermas) para reducir las esporas radicalmente de forma gratuita.'
+            }
         }
 
     def analizar_planta(self, archivo_imagen):
@@ -48,16 +75,22 @@ class AnalizadorCultivos:
         arreglo_imagen = tf.keras.preprocessing.image.img_to_array(imagen)
         arreglo_imagen = np.expand_dims(arreglo_imagen, axis=0)
         
-        # Hacemos la predicción directamente
+        # Hacemos la predicción
         predicciones = self.modelo.predict(arreglo_imagen)
         indice = int(np.argmax(predicciones))
         probabilidad = float(np.max(predicciones))
         
-        nombre_enfermedad = self.clases.get(indice, "Desconocida")
-        tratamiento_sugerido = self.tratamientos.get(nombre_enfermedad, "Consultar a un especialista.")
+        # Extraemos la información del diccionario
+        info = self.info_clases.get(indice, {
+            'nombre': 'Enfermedad no reconocida.',
+            'principal': 'Consultar con un experto agrónomo.',
+            'alternativa': 'Aislar la planta preventivamente.'
+        })
         
+        # Enviamos las variables exactas que tu HTML está esperando ahora
         return {
-            'enfermedad': nombre_enfermedad,
+            'enfermedad': info['nombre'],
             'probabilidad': round(probabilidad * 100, 2),
-            'tratamiento': tratamiento_sugerido
+            'tratamiento_principal': info['principal'],
+            'tratamiento_alternativo': info['alternativa']
         }

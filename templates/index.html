@@ -5,30 +5,173 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analizador de Cultivos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    
+    <style>
+        /* Estilos base de la tarjeta */
+        .tarjeta-resultado {
+            margin-top: 25px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+        }
+        .cabecera-resultado {
+            background-color: #2e7d32;
+            color: white;
+            padding: 15px 20px;
+            margin: 0;
+            font-size: 18px;
+        }
+        .contenido-resultado {
+            padding: 20px;
+        }
+        .destaque {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        .barra-fondo {
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            height: 10px;
+            margin-top: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .barra-progreso {
+            background-color: #4caf50;
+            height: 100%;
+        }
+        .caja-tratamiento {
+            background-color: #e8f5e9;
+            border-left: 4px solid #2e7d32;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+        .caja-tratamiento h3 {
+            color: #2e7d32;
+            font-size: 16px;
+            margin-bottom: 8px;
+            margin-top: 0;
+        }
+
+        /* ¡CORRECCIÓN AQUÍ! Estilos para que la vista previa no rompa el diseño */
+        .vista-previa-contenedor {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .vista-previa-img {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 10px;
+            border: 3px solid #2ecc71;
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
 <body>
     <div class="contenedor">
         <h1>Analizador agrícola</h1>
-        <p>Sube o toma una foto de tu cultivo para detectar enfermedades y recibir tratamiento.</p>
+        <p>Sube la foto de tu cultivo para analizarla.</p>
 
         <form action="/" method="POST" enctype="multipart/form-data" class="formulario">
-            <input type="file" name="imagen" accept="image/*" required class="input-archivo">
-            <button type="submit" class="boton-analizar">Analizar Planta</button>
+            <input type="file" name="imagen" id="inputImagen" accept="image/*" {% if not resultado %}required{% endif %}>
+            
+            <div id="contenedorVistaPrevia" class="vista-previa-contenedor" style="{% if resultado %}display: block;{% else %}display: none;{% endif %}">
+                <p style="font-size: 14px; color: #555; margin-bottom: 5px;"><strong>Imagen bajo análisis:</strong></p>
+                <img id="vistaPrevia" class="vista-previa-img" src="" alt="Previsualización">
+            </div>
+            
+            <button type="submit" class="boton-analizar" style="margin-top: 15px;">Analizar Planta</button>
         </form>
 
         {% if resultado %}
         <div class="tarjeta-resultado">
-            <h2>Resultado: {{ resultado.enfermedad }}</h2>
-            <p><strong>Certeza:</strong> {{ resultado.probabilidad }}%</p>
-            <p><strong>Tratamiento:</strong> {{ resultado.tratamiento }}</p>
-        </div>
-        {% endif %}
+            <div class="cabecera-resultado">
+                🩺 <span>Diagnóstico completado</span>
+            </div>
+            
+            <div class="contenido-resultado">
+                <p class="enfermedad-texto">🌱 Estado detectado: <br><span class="destaque">{{ resultado.enfermedad }}</span></p>
+                
+                <div>
+                    <p style="font-size: 14px; color: #666; margin-bottom: 0;"><strong>Nivel de certeza:</strong> {{ resultado.probabilidad }}%</p>
+                    <div class="barra-fondo">
+                        <div class="barra-progreso" style="width: {{ resultado.probabilidad }}%;"></div>
+                    </div>
+                </div>
 
-        {% if error %}
-        <div class="tarjeta-error">
-            <p><strong>Error:</strong> {{ error }}</p>
+                <div class="caja-tratamiento" style="margin-top: 20px;">
+                    
+                    {% if 'sana' in resultado.enfermedad.lower() or 'buen trabajo' in resultado.enfermedad.lower() %}
+                        
+                        <h3>✅ Recomendación de Cuidado</h3>
+                        <p style="margin: 0; font-size: 14px; color: #444;">
+                            {{ resultado.tratamiento_principal }}
+                        </p>
+
+                    {% else %}
+                        
+                        <h3>🌟 Tratamiento Ideal (Seguro)</h3>
+                        <p style="margin: 0 0 15px 0; font-size: 14px; color: #444;">
+                            {{ resultado.tratamiento_principal }}
+                        </p>
+                        
+                        <hr style="border: 0; border-top: 1px dashed #a5d6a7; margin: 15px 0;">
+                        
+                        <h3 style="color: #e65100;">⚡ Alternativa (Rápida / Bajo costo)</h3>
+                        <p style="margin: 0; font-size: 14px; color: #444;">
+                            {{ resultado.tratamiento_alternativo }}
+                        </p>
+
+                    {% endif %}
+                </div>
+            </div>
         </div>
         {% endif %}
     </div>
+
+    <script>
+        const input = document.getElementById('inputImagen');
+        const vistaPrevia = document.getElementById('vistaPrevia');
+        const contenedor = document.getElementById('contenedorVistaPrevia');
+
+        // Al cargar la página, recuperamos la foto si sobrevivió de la petición POST anterior
+        if (localStorage.getItem('imagenTemporal')) {
+            vistaPrevia.src = localStorage.getItem('imagenTemporal');
+            contenedor.style.display = 'block';
+        }
+
+        input.addEventListener('change', function(event) {
+            if (input.files && input.files.length > 0) {
+                const archivoFisico = input.files.item(0);
+                const lector = new FileReader();
+                
+                lector.onload = function(e) {
+                    const dataURL = e.target.result;
+                    vistaPrevia.src = dataURL;
+                    contenedor.style.display = 'block';
+                    // Persistencia en memoria local
+                    localStorage.setItem('imagenTemporal', dataURL);
+                };
+                
+                lector.readAsDataURL(archivoFisico);
+            } else {
+                limpiarVistaPrevia();
+            }
+        });
+
+        function limpiarVistaPrevia() {
+            vistaPrevia.src = '';
+            contenedor.style.display = 'none';
+            localStorage.removeItem('imagenTemporal');
+        }
+
+        // Si entramos a la raíz limpia sin haber hecho un análisis (GET), limpiamos residuos
+        {% if not resultado %}
+            limpiarVistaPrevia();
+        {% endif %}
+    </script>
 </body>
 </html>

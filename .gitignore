@@ -1,12 +1,9 @@
-# Entornos virtuales (No queremos subir gigabytes de librerías)
-venv/
-.venv/
-env/
+# Tu entorno virtual real (¡Esto salvará a Git!)
+entorno_plantas/
 
 # Caché de Python
 __pycache__/
 *.pyc
 
-# Archivos del sistema u ocultos del editor
-.vscode/
-.DS_Store
+# Tu modelo de IA (Altamente recomendado ignorarlo si pesa más de 100 MB)
+# modelo_plantas.keras

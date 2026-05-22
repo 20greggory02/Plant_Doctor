@@ -14,7 +14,6 @@ body {
     padding: 20px;
 }
 
-/* pantalla del teléfono */
 .contenedor {
     background-color: white;
     width: 100%;
@@ -84,4 +83,31 @@ p {
     padding: 15px;
     border-radius: 5px;
     text-align: left;
+}
+.vista-previa-contenedor {
+    display: none; /* Se mantiene invisible hasta que suban una foto */
+    margin: 20px auto;
+    text-align: center;
+    animation: aparecer 0.5s ease-in-out;
+}
+
+.texto-vista-previa {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.vista-previa-img {
+    max-width: 100%;
+    max-height: 280px;
+    border-radius: 12px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.15);
+    object-fit: cover;
+    border: 3px solid #2ecc71; /* Un borde verde para que resalte */
+}
+
+@keyframes aparecer {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
